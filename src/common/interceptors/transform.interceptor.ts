@@ -7,12 +7,11 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-// تعريف واجهة الاستجابة (Interface)
 export interface Response<T> {
   success: boolean;
-  statusCode: number;
+  statusCode: number; // إضافة كود الحالة
+  message: string; // الرسالة
   data: T;
-  message?: string;
 }
 
 @Injectable()
@@ -24,14 +23,24 @@ export class TransformInterceptor<T> implements NestInterceptor<
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<Response<T>> {
+    const response = context.switchToHttp().getResponse();
+    const statusCode = response.statusCode; // سحب الـ StatusCode (مثلاً 201 عند الإنشاء)
+
     return next.handle().pipe(
-      map((data) => ({
-        success: true,
-        statusCode: context.switchToHttp().getResponse().statusCode,
-        // إذا كانت البيانات تحتوي على رسالة مخصصة، نفصلها عن البيانات الأساسية
-        message: data?.message || 'Request processed successfully',
-        data: data?.results || data, // نمرر البيانات الفعلية
-      })),
+      map((data) => {
+        // التحقق مما إذا كان الـ Controller يرسل رسالة مخصصة
+        const customMessage = data?.message || 'Request processed successfully';
+
+        // استخراج البيانات الفعلية (إذا كانت مغلفة في كائن يحتوي على رسالة)
+        const resultData = data?.results !== undefined ? data.results : data;
+
+        return {
+          success: true,
+          statusCode: statusCode,
+          message: customMessage,
+          data: resultData,
+        };
+      }),
     );
   }
 }

@@ -1,19 +1,20 @@
-import { Controller, Get } from '@nestjs/common';
-import { PrismaService } from './database/prisma.service';
+import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
 
 @Controller()
 export class AppController {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor() {}
 
-  @Get()
-  getHello(): string {
-    return 'Hello World!';
-  }
-  @Get('test')
-  async getTest() {
-    const users = await this.prismaService.user.findMany();
-
-    console.log('Test World!', users);
-    return users;
+  @Get('/health')
+  @HttpCode(HttpStatus.OK)
+  async getHealth() {
+    const health = {
+      status: 'UP',
+      uptime: process.uptime(),
+      timestamp: new Date(Date.now()).toLocaleString(),
+    };
+    return {
+      message: 'Health check passed',
+      results: health,
+    };
   }
 }
