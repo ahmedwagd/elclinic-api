@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,6 +26,12 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Set the global interceptor for response transformation
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  // Set the global filter for handling exceptions
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   const port = process.env.PORT || 3030;
 
