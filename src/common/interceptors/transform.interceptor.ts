@@ -26,6 +26,7 @@ export class TransformInterceptor<T> implements NestInterceptor<
     return next.handle().pipe(
       map((data) => ({
         success: true,
+        statusCode: context.switchToHttp().getResponse().statusCode,
         // إذا كانت البيانات تحتوي على رسالة مخصصة، نفصلها عن البيانات الأساسية
         message: data?.message || 'Request processed successfully',
         data: data?.results || data, // نمرر البيانات الفعلية
