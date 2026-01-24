@@ -11,5 +11,102 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  RECEPTIONIST
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  firstName     String
+  lastName      String
+  role          Role     @default(RECEPTIONIST)
+  isActive      Boolean  @default(true)
+  doctorProfile Doctor? // علاقة 1:1 إذا كان المستخدم طبيب
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Doctor {
+  id             String           @id @default(uuid())
+  specialization String
+  licenseNumber  String           @unique
+  bio            String?
+  userId         String           @unique
+  user           User             @relation(fields: [userId], references: [id])
+  appointments   Appointment[]
+  schedules      DoctorSchedule[] // أوقات العمل
+
+  @@map("doctors")
+}
+
+model Patient {
+  id           String        @id @default(uuid())
+  fullName     String
+  phone        String        @unique
+  email        String?
+  dateOfBirth  DateTime
+  gender       String
+  bloodType    String?
+  address      String?
+  medicalNotes String?       @db.Text
+  appointments Appointment[]
+  createdAt    DateTime      @default(now())
+
+  @@map("patients")
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Appointment {
+  id              String            @id @default(uuid())
+  appointmentDate DateTime
+  status          AppointmentStatus @default(PENDING)
+  notes           String?
+
+  doctorId  String
+  doctor    Doctor  @relation(fields: [doctorId], references: [id])
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  medicalRecord MedicalRecord?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("appointments")
+}
+
+model DoctorSchedule {
+  id        String @id @default(uuid())
+  dayOfWeek Int // 0 (الأحد) إلى 6 (السبت)
+  startTime String // مثال: "09:00"
+  endTime   String // مثال: "17:00"
+  doctorId  String
+  doctor    Doctor @relation(fields: [doctorId], references: [id])
+
+  @@map("doctor_schedules")
+}
+
+model MedicalRecord {
+  id            String      @id @default(uuid())
+  diagnosis     String      @db.Text
+  prescription  String      @db.Text
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  createdAt     DateTime    @default(now())
+
+  @@map("medical_records")
 }
