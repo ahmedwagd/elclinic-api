@@ -10,6 +10,7 @@ import { map } from 'rxjs/operators';
 // تعريف واجهة الاستجابة (Interface)
 export interface Response<T> {
   success: boolean;
+  statusCode: number;
   data: T;
   message?: string;
 }
