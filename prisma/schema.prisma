@@ -13,31 +13,29 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  ADMIN
-  DOCTOR
-  RECEPTIONIST
-}
-
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  password      String
-  firstName     String
-  lastName      String
-  role          Role     @default(RECEPTIONIST)
-  isActive      Boolean  @default(true)
-  doctorProfile Doctor? // علاقة 1:1 إذا كان المستخدم طبيب
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  password           String
+  name               String
+  hashedRefreshToken String?
+  role               Role     @default(RECEPTIONIST)
+  isActive           Boolean  @default(true)
+  doctorProfile      Doctor?
+  patientProfile     Patient?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@map("users")
 }
 
 model Doctor {
   id             String           @id @default(uuid())
-  specialization String
-  licenseNumber  String           @unique
+  phone          String           @unique
+  gender         Gender           @default(UNSPECIFIED)
+  socialId       String?          @unique
+  specialization String?
+  licenseNumber  String?          @unique
   bio            String?
   userId         String           @unique
   user           User             @relation(fields: [userId], references: [id])
@@ -48,26 +46,78 @@ model Doctor {
 }
 
 model Patient {
-  id           String        @id @default(uuid())
-  fullName     String
-  phone        String        @unique
-  email        String?
-  dateOfBirth  DateTime
-  gender       String
-  bloodType    String?
-  address      String?
-  medicalNotes String?       @db.Text
-  appointments Appointment[]
-  createdAt    DateTime      @default(now())
+  id               String            @id @default(uuid())
+  phone            String            @unique
+  email            String?
+  dateOfBirth      DateTime?
+  address          String?
+  occupation       String?           @db.VarChar(255)
+  weight           Decimal?          @db.Decimal(5, 2) // kg
+  height           Decimal?          @db.Decimal(5, 2) // cm
+  medicalHistory   String?           @db.Text
+  emergencyContact String?           @db.VarChar(255)
+  emergencyPhone   String?           @db.VarChar(20)
+  appointments     Appointment[]
+  examinations     Examination[]
+  progressionNotes ProgressionNote[]
+  treatmentPlans   TreatmentPlan[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  userId           String            @unique
+  user             User              @relation(fields: [userId], references: [id])
 
   @@map("patients")
 }
 
-enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
+// ============= MEDICAL RECORD MODELS =============
+
+model Examination {
+  id                           String   @id @default(uuid())
+  patientId                    String
+  subjectivePainScale          Int?     @db.SmallInt // 0-10
+  subjectiveLocation           String?  @db.VarChar(255)
+  subjectiveDescription        String?  @db.Text
+  subjectiveAggravatingFactors String?  @db.Text
+  objectivePosture             String?  @db.VarChar(255)
+  objectiveRegion              String?  @db.VarChar(255)
+  objectivePhysiologicalMotion String?  @db.Text
+  palpation                    String?  @db.Text
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+
+  // Relations
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([patientId, createdAt])
+  @@map("examinations")
+}
+
+model ProgressionNote {
+  id        String   @id @default(uuid())
+  patientId String
+  note      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([patientId])
+  @@map("progression_notes")
+}
+
+model TreatmentPlan {
+  id          String   @id @default(uuid())
+  patientId   String
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([patientId])
+  @@map("treatment_plans")
 }
 
 model Appointment {
@@ -109,4 +159,25 @@ model MedicalRecord {
   createdAt     DateTime    @default(now())
 
   @@map("medical_records")
+}
+
+// ============= ENUMS =============
+
+enum Gender {
+  MALE
+  FEMALE
+  UNSPECIFIED
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  RECEPTIONIST
 }
