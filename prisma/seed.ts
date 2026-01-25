@@ -1,4 +1,4 @@
-import { hash } from 'argon2';
+import argon2 from 'argon2';
 import { PrismaClient } from '../generated/prisma/client';
 
 import { Pool } from 'pg';
@@ -11,7 +11,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 async function main() {
   // Generate hashed password for admin using argon2
-  const hashedPassword = await hash('123456');
+  const hashedPassword = await argon2.hash('123456');
   // Seed ADMIN
   const ADMIN = await prisma.user.create({
     data: {
