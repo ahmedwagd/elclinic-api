@@ -28,6 +28,9 @@ export class AppController {
     const health = {
       status: 'UP',
       uptime: formatUptime(process.uptime()),
+      usedMemory: `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(
+        2,
+      )} MB`,
       timestamp: new Date(Date.now()).toLocaleString(),
       totalCounts: {
         usersCount,
