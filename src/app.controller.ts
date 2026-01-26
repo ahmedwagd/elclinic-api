@@ -7,6 +7,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { PaginationInterceptor } from './common/interceptors/pagination.interceptor';
+import formatUptime from './common/helpers/format-uptime.helper';
 
 @Controller()
 export class AppController {
@@ -23,9 +24,10 @@ export class AppController {
         this.prismaService.patient.count(),
         this.prismaService.appointment.count(),
       ]);
+
     const health = {
       status: 'UP',
-      uptime: process.uptime(),
+      uptime: formatUptime(process.uptime()),
       timestamp: new Date(Date.now()).toLocaleString(),
       totalCounts: {
         usersCount,
