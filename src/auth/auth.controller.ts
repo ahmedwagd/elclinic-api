@@ -8,7 +8,8 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto';
-import { LocalAuthGuard } from './guards/LocalAuthGuard.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { JwtAuthGuard, LocalAuthGuard } from './guards';
 
 @Controller('auth')
 export class AuthController {
@@ -29,11 +30,12 @@ export class AuthController {
   }
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout() {
-    const data = this.authService.logout();
+  @UseGuards(JwtAuthGuard)
+  async logout(@CurrentUser() user: any) {
+    const userId = user.id;
+    await this.authService.logout(userId);
     const results = {
       message: 'Logout successful',
-      results: data,
     };
 
     return results;

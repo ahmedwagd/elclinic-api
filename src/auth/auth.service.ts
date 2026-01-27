@@ -28,7 +28,7 @@ export class AuthService {
     }
     // Generate tokens
     const tokens = await this.generateTokens(user.id, user.email);
-    // await this.updateRefreshToken(user.id, tokens.refreshToken);
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
     const data = {
       ...(await this.excludeUnnecessaryFields(user)),
       accessToken: tokens.accessToken,
@@ -36,10 +36,13 @@ export class AuthService {
     };
     return data;
   }
-  async logout() {
-    // TODO: Add logic to clear access token and refresh token from cookies
-
-    return '';
+  async logout(userId: string) {
+    console.log(userId);
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken: null },
+    });
+    return { message: 'Logged out successfully' };
   }
   async refreshToken() {
     // TODO: Add logic to refresh access token using refresh token
@@ -53,12 +56,27 @@ export class AuthService {
       where: {
         email,
       },
+      select: {
+        id: true,
+        isActive: true,
+      },
     });
-    if (
-      user &&
-      user.isActive &&
-      (await argon2.verify(user.password, password))
-    ) {
+    if (user && user.isActive) {
+      return this.excludeUnnecessaryFields(user);
+    }
+    return null;
+  }
+  async validateJwtUser(userId: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+        isActive: true,
+      },
+    });
+    if (user && user.isActive) {
       return this.excludeUnnecessaryFields(user);
     }
     return null;
@@ -80,9 +98,15 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+  private async updateRefreshToken(userId: string, refreshToken: string) {
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken },
+    });
+  }
   async excludeUnnecessaryFields(user: any) {
-    const { password, hashedRefreshToken, createdAt, updatedAt, ...result } =
-      user;
+    const { password, createdAt, updatedAt, ...result } = user;
     return result;
   }
 }
