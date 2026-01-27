@@ -1,40 +1,43 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { LoginDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
-  create(@Body() createAuthDto: any) {
-    return this.authService.create(createAuthDto);
-  }
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async logIn(@Body() loginDto: LoginDto) {
+    const data = await this.authService.logIn(loginDto);
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
-  }
+    const results = {
+      message: 'Login successful',
+      results: data,
+    };
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
+    return results;
   }
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout() {
+    const data = this.authService.logout();
+    const results = {
+      message: 'Logout successful',
+      results: data,
+    };
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: any) {
-    return this.authService.update(+id, updateAuthDto);
+    return results;
   }
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken() {
+    const data = this.authService.refreshToken();
+    const results = {
+      message: 'Refresh token successful',
+      results: data,
+    };
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+    return results;
   }
 }
