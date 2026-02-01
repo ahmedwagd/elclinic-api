@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { LoginDto } from './dto';
 import { PrismaService } from 'src/database/prisma.service';
+import { JwtPayload, Tokens } from 'src/common/types';
 
 @Injectable()
 export class AuthService {
@@ -28,11 +29,11 @@ export class AuthService {
     }
     // Generate tokens
     const tokens = await this.generateTokens(user.id, user.email);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    await this.updateRefreshToken(user.id, tokens.refresh_token);
     const data = {
       ...(await this.excludeUnnecessaryFields(user)),
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
     };
     return data;
   }
@@ -81,22 +82,23 @@ export class AuthService {
     return null;
   }
 
-  async generateTokens(userId: string, email: string) {
-    const payload = { sub: userId, email };
+  async generateTokens(userId: string, email: string): Promise<Tokens> {
+    const jwtPayload: JwtPayload = { sub: userId, email };
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(jwtPayload, {
         secret: this.configService.getOrThrow('jwt.secret'),
         expiresIn: this.configService.getOrThrow('jwt.expiresIn'),
       }),
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(jwtPayload, {
         secret: this.configService.getOrThrow('jwt.refreshSecret'),
         expiresIn: this.configService.getOrThrow('jwt.refreshExpiresIn'),
       }),
     ]);
 
-    return { accessToken, refreshToken };
+    return { access_token: accessToken, refresh_token: refreshToken };
   }
+
   private async updateRefreshToken(userId: string, refreshToken: string) {
     const hashedRefreshToken = await argon2.hash(refreshToken);
     await this.prismaService.user.update({

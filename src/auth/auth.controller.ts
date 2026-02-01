@@ -6,20 +6,21 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
+import { JwtAuthGuard } from '../common/guards';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { JwtAuthGuard, LocalAuthGuard } from '../common/guards';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @UseGuards(LocalAuthGuard)
+  @Public()
   @HttpCode(HttpStatus.OK)
-  async logIn(@Body() loginDto: LoginDto) {
-    const data = await this.authService.logIn(loginDto);
+  logIn(@Body() loginDto: LoginDto) {
+    const data = this.authService.logIn(loginDto);
 
     const results = {
       message: 'Login successful',
@@ -31,9 +32,9 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  async logout(@CurrentUser() user: any) {
+  logOut(@CurrentUser() user: any) {
     const userId = user.id;
-    const data = await this.authService.logout(userId);
+    const data = this.authService.logout(userId);
     const results = {
       message: 'Logout successful',
       data,
@@ -42,8 +43,9 @@ export class AuthController {
     return results;
   }
   @Post('refresh')
+  @Public()
   @HttpCode(HttpStatus.OK)
-  async refreshToken() {
+  refreshToken() {
     const data = this.authService.refreshToken();
     const results = {
       message: 'Refresh token successful',
