@@ -37,17 +37,16 @@ export class AuthService {
     return data;
   }
   async logout(userId: string) {
-    console.log(userId);
     await this.prismaService.user.update({
       where: { id: userId },
       data: { hashedRefreshToken: null },
     });
-    return { message: 'Logged out successfully' };
+    return;
   }
   async refreshToken() {
     // TODO: Add logic to refresh access token using refresh token
 
-    return '';
+    return null;
   }
 
   async validateUser(dto: LoginDto) {

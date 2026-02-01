@@ -33,9 +33,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async logout(@CurrentUser() user: any) {
     const userId = user.id;
-    await this.authService.logout(userId);
+    const data = await this.authService.logout(userId);
     const results = {
       message: 'Logout successful',
+      data,
     };
 
     return results;
