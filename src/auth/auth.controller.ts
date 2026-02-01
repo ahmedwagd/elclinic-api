@@ -9,7 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { JwtAuthGuard, LocalAuthGuard } from './guards';
+import { JwtAuthGuard, LocalAuthGuard } from '../common/guards';
 
 @Controller('auth')
 export class AuthController {
