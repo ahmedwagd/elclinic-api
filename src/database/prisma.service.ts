@@ -16,7 +16,11 @@ export class PrismaService
       // ssl: false,
     });
     const adapter = new PrismaPg(pool);
-    super({ adapter });
+    super({
+      adapter, // ← this is the key change for Prisma 7+
+      // Optional: add logging, etc.
+      log: ['query', 'info', 'warn', 'error'],
+    });
   }
   async onModuleInit() {
     // Note: this is optional
