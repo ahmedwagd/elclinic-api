@@ -31,7 +31,7 @@ model User {
 }
 
 model Doctor {
-  id             String           @id @default(uuid())
+  id             Int              @id @default(autoincrement())
   phone          String           @unique
   gender         Gender           @default(UNSPECIFIED)
   socialId       String?          @unique
@@ -47,7 +47,7 @@ model Doctor {
 }
 
 model Patient {
-  id               String            @id @default(uuid())
+  id               Int               @id @default(autoincrement())
   phone            String            @unique
   email            String?
   dateOfBirth      DateTime?
@@ -73,8 +73,8 @@ model Patient {
 // ============= MEDICAL RECORD MODELS =============
 
 model Examination {
-  id                           String   @id @default(uuid())
-  patientId                    String
+  id                           Int      @id @default(autoincrement())
+  patientId                    Int
   subjectivePainScale          Int?     @db.SmallInt // 0-10
   subjectiveLocation           String?  @db.VarChar(255)
   subjectiveDescription        String?  @db.Text
@@ -94,8 +94,8 @@ model Examination {
 }
 
 model ProgressionNote {
-  id        String   @id @default(uuid())
-  patientId String
+  id        Int      @id @default(autoincrement())
+  patientId Int
   note      String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -108,8 +108,8 @@ model ProgressionNote {
 }
 
 model TreatmentPlan {
-  id          String   @id @default(uuid())
-  patientId   String
+  id          Int      @id @default(autoincrement())
+  patientId   Int
   description String   @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -122,14 +122,14 @@ model TreatmentPlan {
 }
 
 model Appointment {
-  id              String            @id @default(uuid())
+  id              Int               @id @default(autoincrement())
   appointmentDate DateTime
   status          AppointmentStatus @default(PENDING)
   notes           String?
 
-  doctorId  String
+  doctorId  Int
   doctor    Doctor  @relation(fields: [doctorId], references: [id])
-  patientId String
+  patientId Int
   patient   Patient @relation(fields: [patientId], references: [id])
 
   medicalRecord MedicalRecord?
@@ -141,21 +141,21 @@ model Appointment {
 }
 
 model DoctorSchedule {
-  id        String @id @default(uuid())
+  id        Int    @id @default(autoincrement())
   dayOfWeek Int // 0 (الأحد) إلى 6 (السبت)
   startTime String // مثال: "09:00"
   endTime   String // مثال: "17:00"
-  doctorId  String
+  doctorId  Int
   doctor    Doctor @relation(fields: [doctorId], references: [id])
 
   @@map("doctor_schedules")
 }
 
 model MedicalRecord {
-  id            String      @id @default(uuid())
+  id            Int         @id @default(autoincrement())
   diagnosis     String      @db.Text
   prescription  String      @db.Text
-  appointmentId String      @unique
+  appointmentId Int         @unique
   appointment   Appointment @relation(fields: [appointmentId], references: [id])
   createdAt     DateTime    @default(now())
 
