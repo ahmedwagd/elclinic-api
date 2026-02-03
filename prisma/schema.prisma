@@ -181,4 +181,5 @@ enum Role {
   ADMIN
   DOCTOR
   RECEPTIONIST
+  PATIENT
 }

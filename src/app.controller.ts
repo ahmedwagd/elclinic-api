@@ -8,12 +8,14 @@ import {
 } from '@nestjs/common';
 import { PaginationInterceptor } from './common/interceptors/pagination.interceptor';
 import formatUptime from './common/helpers/format-uptime.helper';
+import { Public } from './common/decorators/public.decorator';
 
 @Controller()
 export class AppController {
   constructor(private readonly prismaService: PrismaService) {}
 
   @Get('/health')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(PaginationInterceptor)
   async getHealth() {

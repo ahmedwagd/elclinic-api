@@ -2,88 +2,59 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { LoginDto } from './dto';
-import { PrismaService } from 'src/database/prisma.service';
 import { JwtPayload, Tokens } from 'src/common/types';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly prismaService: PrismaService,
+    private readonly userService: UsersService,
   ) {}
-  async logIn(loginDto: LoginDto) {
-    const { email, password } = loginDto;
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        email,
-      },
-    });
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    const isPasswordValid = await argon2.verify(user.password, password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    // Generate tokens
-    const tokens = await this.generateTokens(user.id, user.email);
-    await this.updateRefreshToken(user.id, tokens.refresh_token);
-    const data = {
-      ...(await this.excludeUnnecessaryFields(user)),
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
+
+  async logIn(userId: string) {
+    const { accessToken, refreshToken } = await this.generateTokens(userId);
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.userService.updateHashedRefreshToken(userId, hashedRefreshToken);
+    return {
+      id: userId,
+      accessToken,
+      refreshToken,
     };
-    return data;
   }
+
   async logout(userId: string) {
-    await this.prismaService.user.update({
-      where: { id: userId },
-      data: { hashedRefreshToken: null },
-    });
-    return;
-  }
-  async refreshToken() {
-    // TODO: Add logic to refresh access token using refresh token
-
-    return null;
+    return this.userService.updateHashedRefreshToken(userId, null);
   }
 
-  async validateUser(dto: LoginDto) {
-    const { email, password } = dto;
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        email,
-      },
-      select: {
-        id: true,
-        isActive: true,
-      },
-    });
-    if (user && user.isActive) {
-      return this.excludeUnnecessaryFields(user);
-    }
-    return null;
-  }
-  async validateJwtUser(userId: string) {
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        id: userId,
-      },
-      select: {
-        id: true,
-        isActive: true,
-      },
-    });
-    if (user && user.isActive) {
-      return this.excludeUnnecessaryFields(user);
-    }
-    return null;
+  async validateRefreshToken(userId: string, refreshToken: string) {
+    const user = await this.userService.findById(userId);
+    if (!user || !user.hashedRefreshToken)
+      throw new UnauthorizedException('Invalid Refresh Token');
+
+    const refreshTokenMatches = await argon2.verify(
+      user.hashedRefreshToken,
+      refreshToken,
+    );
+    if (!refreshTokenMatches)
+      throw new UnauthorizedException('Invalid Refresh Token');
+
+    return { id: userId };
   }
 
-  async generateTokens(userId: string, email: string): Promise<Tokens> {
-    const jwtPayload: JwtPayload = { sub: userId, email };
+  async validateUser(email: string, password: string) {
+    const user = await this.userService.findByEmail(email);
+    if (!user) throw new UnauthorizedException('User not found!');
+    const isPasswordMatch = await argon2.verify(user.password, password);
+    if (!isPasswordMatch)
+      throw new UnauthorizedException('Invalid credentials');
+
+    return { id: user.id };
+  }
+
+  async generateTokens(userId: string): Promise<Tokens> {
+    const jwtPayload: JwtPayload = { sub: userId };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(jwtPayload, {
@@ -96,16 +67,20 @@ export class AuthService {
       }),
     ]);
 
-    return { access_token: accessToken, refresh_token: refreshToken };
+    return { accessToken, refreshToken };
   }
 
-  private async updateRefreshToken(userId: string, refreshToken: string) {
+  async refreshToken(userId: string) {
+    const { accessToken, refreshToken } = await this.generateTokens(userId);
     const hashedRefreshToken = await argon2.hash(refreshToken);
-    await this.prismaService.user.update({
-      where: { id: userId },
-      data: { hashedRefreshToken },
-    });
+    await this.userService.updateHashedRefreshToken(userId, hashedRefreshToken);
+    return {
+      id: userId,
+      accessToken,
+      refreshToken,
+    };
   }
+
   async excludeUnnecessaryFields(user: any) {
     const { password, createdAt, updatedAt, ...result } = user;
     return result;

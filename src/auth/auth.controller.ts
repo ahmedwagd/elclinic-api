@@ -6,11 +6,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { Public } from 'src/common/decorators/public.decorator';
-import { JwtAuthGuard } from '../common/guards';
+import {
+  JwtAuthGuard,
+  LocalAuthGuard,
+  RefreshAuthGuard,
+} from '../common/guards';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto';
+import { CurrentUser, Public } from 'src/common/decorators';
 
 @Controller('auth')
 export class AuthController {
@@ -19,8 +21,10 @@ export class AuthController {
   @Post('login')
   @Public()
   @HttpCode(HttpStatus.OK)
-  logIn(@Body() loginDto: LoginDto) {
-    const data = this.authService.logIn(loginDto);
+  @UseGuards(LocalAuthGuard)
+  logIn(@CurrentUser() user: any) {
+    const userId = user.id;
+    const data = this.authService.logIn(userId);
 
     const results = {
       message: 'Login successful',
@@ -29,6 +33,7 @@ export class AuthController {
 
     return results;
   }
+
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
@@ -42,14 +47,17 @@ export class AuthController {
 
     return results;
   }
+
   @Post('refresh')
   @Public()
   @HttpCode(HttpStatus.OK)
-  refreshToken() {
-    const data = this.authService.refreshToken();
+  @UseGuards(RefreshAuthGuard)
+  refreshToken(@CurrentUser() user: any) {
+    const userId = user.id;
+    const data = this.authService.refreshToken(userId);
     const results = {
       message: 'Refresh token successful',
-      results: data,
+      // results: data,
     };
 
     return results;
