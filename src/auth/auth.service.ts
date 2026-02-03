@@ -25,7 +25,8 @@ export class AuthService {
   }
 
   async logout(userId: string) {
-    return this.userService.updateHashedRefreshToken(userId, null);
+    await this.userService.updateHashedRefreshToken(userId, null);
+    return null;
   }
 
   async validateRefreshToken(userId: string, refreshToken: string) {

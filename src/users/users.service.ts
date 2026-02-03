@@ -20,10 +20,11 @@ export class UsersService {
     userId: string,
     hashedRefreshToken: string | null,
   ) {
-    return await this.userRepository.updateHashedRefreshToken(
+    const user = await this.userRepository.updateHashedRefreshToken(
       userId,
       hashedRefreshToken,
     );
+    return this.excludeUnnecessaryFields(user);
   }
   async findById(userId: string) {
     const user = await this.userRepository.findById(userId);
@@ -34,7 +35,9 @@ export class UsersService {
     return this.excludeUnnecessaryFields(user);
   }
   async delete(userId: string) {
-    return await this.userRepository.delete(userId);
+    return this.excludeUnnecessaryFields(
+      await this.userRepository.delete(userId),
+    );
   }
   async excludeUnnecessaryFields(user: any) {
     const { password, createdAt, updatedAt, ...result } = user;
