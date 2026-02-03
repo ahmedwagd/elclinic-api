@@ -31,16 +31,14 @@ export class AuthService {
   async validateRefreshToken(userId: string, refreshToken: string) {
     const user = await this.userService.findById(userId);
     if (!user || !user.hashedRefreshToken)
-      throw new UnauthorizedException(
-        'Invalid Refresh Token: User or Token not found',
-      );
+      throw new UnauthorizedException('Invalid Refresh Token');
 
     const refreshTokenMatches = await argon2.verify(
       user.hashedRefreshToken,
       refreshToken,
     );
     if (!refreshTokenMatches)
-      throw new UnauthorizedException('Invalid Refresh Token: Mismatch');
+      throw new UnauthorizedException('Invalid Refresh Token');
 
     return { id: userId };
   }
