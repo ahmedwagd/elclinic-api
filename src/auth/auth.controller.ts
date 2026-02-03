@@ -22,9 +22,9 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
-  logIn(@CurrentUser() user: any) {
+  async logIn(@CurrentUser() user: any) {
     const userId = user.id;
-    const data = this.authService.logIn(userId);
+    const data = await this.authService.logIn(userId);
 
     const results = {
       message: 'Login successful',
@@ -37,9 +37,9 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  logOut(@CurrentUser() user: any) {
+  async logOut(@CurrentUser() user: any) {
     const userId = user.id;
-    const data = this.authService.logout(userId);
+    const data = await this.authService.logout(userId);
     const results = {
       message: 'Logout successful',
       data,
@@ -52,12 +52,12 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshAuthGuard)
-  refreshToken(@CurrentUser() user: any) {
+  async refreshToken(@CurrentUser() user: any) {
     const userId = user.id;
-    const data = this.authService.refreshToken(userId);
+    const data = await this.authService.refreshToken(userId);
     const results = {
       message: 'Refresh token successful',
-      // results: data,
+      results: data,
     };
 
     return results;

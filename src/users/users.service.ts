@@ -13,6 +13,9 @@ export class UsersService {
     const user = await this.userRepository.findOne(email);
     return this.excludeUnnecessaryFields(user);
   }
+  async findByEmailWithPassword(email: string) {
+    return await this.userRepository.findOne(email);
+  }
   async updateHashedRefreshToken(
     userId: string,
     hashedRefreshToken: string | null,

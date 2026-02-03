@@ -6,8 +6,8 @@ export const getCurrentUserByContext = (context: ExecutionContext) =>
 
 export const CurrentUser = createParamDecorator(
   (data: keyof JwtPayloadWithRt | undefined, ctx: ExecutionContext) => {
-    const request = getCurrentUserByContext(ctx);
+    const user = getCurrentUserByContext(ctx);
 
-    return data ? request.user?.[data] : request.user;
+    return data ? user?.[data] : user;
   },
 );

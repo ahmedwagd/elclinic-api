@@ -31,20 +31,22 @@ export class AuthService {
   async validateRefreshToken(userId: string, refreshToken: string) {
     const user = await this.userService.findById(userId);
     if (!user || !user.hashedRefreshToken)
-      throw new UnauthorizedException('Invalid Refresh Token');
+      throw new UnauthorizedException(
+        'Invalid Refresh Token: User or Token not found',
+      );
 
     const refreshTokenMatches = await argon2.verify(
       user.hashedRefreshToken,
       refreshToken,
     );
     if (!refreshTokenMatches)
-      throw new UnauthorizedException('Invalid Refresh Token');
+      throw new UnauthorizedException('Invalid Refresh Token: Mismatch');
 
     return { id: userId };
   }
 
   async validateUser(email: string, password: string) {
-    const user = await this.userService.findByEmail(email);
+    const user = await this.userService.findByEmailWithPassword(email);
     if (!user) throw new UnauthorizedException('User not found!');
     const isPasswordMatch = await argon2.verify(user.password, password);
     if (!isPasswordMatch)
@@ -79,10 +81,5 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
-  }
-
-  async excludeUnnecessaryFields(user: any) {
-    const { password, createdAt, updatedAt, ...result } = user;
-    return result;
   }
 }
