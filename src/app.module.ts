@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './common/guards';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      // envFilePath: '.env',
       load: [require('./common/config/configuration').default],
     }),
     DatabaseModule,
