@@ -9,11 +9,17 @@ import {
 import { PaginationInterceptor } from './common/interceptors/pagination.interceptor';
 import formatUptime from './common/helpers/format-uptime.helper';
 import { Public } from './common/decorators/public.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller()
 export class AppController {
   constructor(private readonly prismaService: PrismaService) {}
-
+  @Throttle({
+    default: {
+      limit: 4,
+      ttl: 10000,
+    },
+  }) // Max 5 requests per 10 seconds for this route
   @Get('/health')
   @Public()
   @HttpCode(HttpStatus.OK)
