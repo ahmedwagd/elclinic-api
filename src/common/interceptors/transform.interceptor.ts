@@ -21,12 +21,15 @@ export class TransformInterceptor<T> implements NestInterceptor<
       map((data) => {
         const response = context.switchToHttp().getResponse();
         const statusCode = response.statusCode;
-
+        const message = data?.message ?? 'Request processed successfully';
+        const dataExcludeMessage = { ...data };
+        delete dataExcludeMessage.message;
         return {
           success: true,
           statusCode,
-          message: data?.message ?? 'Request processed successfully',
-          data: data?.results ?? data,
+          message,
+          // remove message from data for none repeat
+          ...(data?.results ?? dataExcludeMessage),
         };
       }),
     );
