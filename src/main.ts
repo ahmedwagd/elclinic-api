@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,7 +19,7 @@ async function bootstrap() {
     // allowedHeaders: ['Authorization', 'Content-Type'],
     allowedHeaders: ['Content-Type'],
   });
-
+  app.use(helmet());
   // validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
