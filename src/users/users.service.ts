@@ -7,11 +7,16 @@ export class UsersService {
   constructor(private readonly userRepository: UserRepository) {}
   async create(createUserDto: CreateUserDto) {
     const user = await this.userRepository.create(createUserDto);
-    return this.excludeUnnecessaryFields(user);
+    return user;
   }
   async findByEmail(email: string) {
     const user = await this.userRepository.findOne(email);
-    return this.excludeUnnecessaryFields(user);
+
+    try {
+      return user;
+    } catch (error) {
+      return null;
+    }
   }
   async findByEmailWithPassword(email: string) {
     return await this.userRepository.findOne(email);
@@ -24,23 +29,22 @@ export class UsersService {
       userId,
       hashedRefreshToken,
     );
-    return this.excludeUnnecessaryFields(user);
+    return user;
   }
   async findById(userId: string) {
     const user = await this.userRepository.findById(userId);
-    return this.excludeUnnecessaryFields(user);
+    return user;
   }
   async update(userId: string, updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.update(userId, updateUserDto);
-    return this.excludeUnnecessaryFields(user);
+    return user;
   }
   async delete(userId: string) {
-    return this.excludeUnnecessaryFields(
-      await this.userRepository.delete(userId),
-    );
+    const user = await this.userRepository.delete(userId);
+    return user;
   }
-  async excludeUnnecessaryFields(user: any) {
-    const { password, createdAt, updatedAt, ...result } = user;
-    return result;
-  }
+  // async excludeUnnecessaryFields(user: any) {
+  //   const { password, createdAt, updatedAt, ...result } = user;
+  //   return result;
+  // }
 }
