@@ -16,6 +16,17 @@ export class UserRepository {
     return await this.prisma.user.findMany({
       skip,
       take,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        doctorProfile: true,
+        patientProfile: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
   }
   async findById(userId: string) {
@@ -23,12 +34,26 @@ export class UserRepository {
       where: {
         id: userId,
       },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        hashedRefreshToken: true,
+      },
     });
   }
   async findOne(email: string) {
     return await this.prisma.user.findUnique({
       where: {
         email,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        password: true,
       },
     });
   }
@@ -38,6 +63,12 @@ export class UserRepository {
         id: userId,
       },
       data: updateUserDto,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
     });
   }
   async delete(userId: string) {
@@ -57,6 +88,12 @@ export class UserRepository {
       },
       data: {
         hashedRefreshToken,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
       },
     });
   }
