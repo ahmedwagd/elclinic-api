@@ -20,26 +20,44 @@ export class AuthService {
     const user = await this.userService.findById(userId);
     return {
       id: userId,
-      email: user.email,
-      name: user.name,
-      role: user.role,
+      email: user?.email,
+      name: user?.name,
+      role: user?.role,
       accessToken,
       refreshToken,
     };
   }
 
   async logout(userId: string) {
+    const user = await this.userService.findById(userId);
+
+    if (!user?.hashedRefreshToken)
+      throw new UnauthorizedException('User already logged out');
+
     await this.userService.updateHashedRefreshToken(userId, null);
     return null;
   }
 
+  async getMe(userId: string) {
+    const user = await this.userService.findById(userId);
+    if (!user) throw new UnauthorizedException('User not found!');
+    if (user.hashedRefreshToken === null)
+      throw new UnauthorizedException('User already logged out');
+    return {
+      id: userId,
+      email: user?.email,
+      name: user?.name,
+      role: user?.role,
+    };
+  }
+
   async validateRefreshToken(userId: string, refreshToken: string) {
     const user = await this.userService.findById(userId);
-    if (!user || !user.hashedRefreshToken)
+    if (!user || !user?.hashedRefreshToken)
       throw new UnauthorizedException('Invalid Refresh Token');
 
     const refreshTokenMatches = await argon2.verify(
-      user.hashedRefreshToken,
+      user?.hashedRefreshToken,
       refreshToken,
     );
     if (!refreshTokenMatches)
@@ -50,12 +68,13 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.userService.findByEmailWithPassword(email);
-    if (!user) throw new UnauthorizedException('User not found!');
-    const isPasswordMatch = await argon2.verify(user.password, password);
+    if (!user || !user?.password)
+      throw new UnauthorizedException('User not found!');
+    const isPasswordMatch = await argon2.verify(user?.password, password);
     if (!isPasswordMatch)
       throw new UnauthorizedException('Invalid credentials');
 
-    return { id: user.id };
+    return { id: user?.id };
   }
 
   async generateTokens(userId: string): Promise<Tokens> {
