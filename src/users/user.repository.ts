@@ -12,7 +12,8 @@ export class UserRepository {
       data: createUserDto,
     });
   }
-  async findAll({ skip, take }: { skip: number; take: number }) {
+  // make params optional
+  async findAll({ skip, take }: { skip?: number; take?: number }) {
     return await this.prisma.user.findMany({
       skip,
       take,
@@ -126,6 +127,26 @@ export class UserRepository {
             id: patientProfileId,
           },
         },
+      },
+    });
+  }
+  async getUserPassword(userId: string) {
+    return await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        password: true,
+      },
+    });
+  }
+  async updateHashedPassword(userId: string, hashedPassword: string) {
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        password: hashedPassword,
       },
     });
   }

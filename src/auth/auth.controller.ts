@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
@@ -17,7 +18,7 @@ import {
 } from '../common/guards';
 import { AuthService } from './auth.service';
 import { CurrentUser, Public } from 'src/common/decorators';
-import { AuthResponseDto } from './dto';
+import { AuthResponseDto, ChangePasswordDto } from './dto';
 import { SkipThrottle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 
@@ -35,7 +36,8 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
     const userId = user.id;
-    const data = await this.authService.logIn(userId);
+    const role = user.role;
+    const data = await this.authService.logIn(userId, role);
     res.cookie('refreshToken', data.refreshToken, {
       httpOnly: true,
       secure: false, // خليها false في local dev
@@ -86,7 +88,8 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
     const userId = user.id;
-    const data = await this.authService.refreshToken(userId);
+    const role = user.role;
+    const data = await this.authService.refreshToken(userId, role);
     // const refreshToken = req.cookies['refreshToken'];
     // if (!refreshToken) {
     //   throw new UnauthorizedException();
@@ -125,6 +128,24 @@ export class AuthController {
         name: data.name,
         role: data.role,
       },
+    };
+    return results;
+  }
+
+  // change my password
+  @Patch('change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @CurrentUser() user: any,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    const userId = user.id;
+    const data = await this.authService.changePassword(
+      userId,
+      changePasswordDto,
+    );
+    const results = {
+      message: 'Change password success',
     };
     return results;
   }
