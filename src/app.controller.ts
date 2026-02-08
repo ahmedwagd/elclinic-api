@@ -1,4 +1,4 @@
-import { PrismaService } from './database/prisma.service';
+import { PrismaService } from './modules/database/prisma.service';
 import {
   Controller,
   Get,
