@@ -57,25 +57,17 @@ export class AuthService {
   }
 
   async changePassword(userId: any, changePasswordDto: ChangePasswordDto) {
-    console.log('AuthService.changePassword called for userId:', userId);
     const { oldPassword, newPassword } = changePasswordDto;
     const user = await this.userService.findById(userId);
-    if (!user) {
-      console.log('User not found for userId:', userId);
-      throw new UnauthorizedException('User not found!');
-    }
+    if (!user) throw new UnauthorizedException('User not found!');
     // check old password matches
     const storedPassword = await this.userService.getUserPassword(userId);
-    if (!storedPassword) {
-      console.log('Stored password not found for userId:', userId);
+    if (!storedPassword)
       throw new UnauthorizedException('User password not found!');
-    }
 
     const passwordMatches = await argon2.verify(storedPassword, oldPassword);
-    if (!passwordMatches) {
-      console.log('Password mismatch for userId:', userId);
+    if (!passwordMatches)
       throw new UnauthorizedException('Invalid Old Password');
-    }
     const hashedPassword = await argon2.hash(newPassword);
     await this.userService.updateHashedPassword(userId, hashedPassword);
     return {
