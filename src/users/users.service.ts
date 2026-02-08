@@ -7,6 +7,11 @@ import * as argon2 from 'argon2';
 export class UsersService {
   constructor(private readonly userRepository: UserRepository) {}
   async create(createUserDto: CreateUserDto) {
+    // check if user already exists
+    const existingUser = await this.findByEmail(createUserDto.email);
+    if (existingUser) {
+      throw new Error('User already exists');
+    }
     // hash password argon2
     createUserDto.password = await argon2.hash(createUserDto.password);
     const user = await this.userRepository.create(createUserDto);
