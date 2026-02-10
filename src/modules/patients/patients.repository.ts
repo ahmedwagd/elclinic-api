@@ -57,6 +57,20 @@ export class PatientsRepository {
       },
     });
   }
+  async findByPhoneNumber(phone: string) {
+    return await this.prisma.patient.findUnique({
+      where: { phone },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
 
   async update(id: number, data: UpdatePatientDto) {
     return await this.prisma.patient.update({

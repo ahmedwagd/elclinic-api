@@ -22,38 +22,57 @@ export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
   @Post()
-  @Roles(PrismaRole.ADMIN, PrismaRole.RECEPTIONIST)
-  create(@Body() createPatientDto: CreatePatientDto) {
-    return this.patientsService.create(createPatientDto);
+  @Roles(PrismaRole.ADMIN, PrismaRole.RECEPTIONIST, PrismaRole.DOCTOR)
+  async create(@Body() createPatientDto: CreatePatientDto) {
+    const patient = await this.patientsService.create(createPatientDto);
+    return {
+      message: 'Patient created successfully',
+      data: patient,
+    };
   }
 
   @Get()
   @Roles(PrismaRole.ADMIN, PrismaRole.RECEPTIONIST, PrismaRole.DOCTOR)
-  findAll(
+  async findAll(
     @Query('skip', new ParseIntPipe({ optional: true })) skip?: number,
     @Query('take', new ParseIntPipe({ optional: true })) take?: number,
   ) {
-    return this.patientsService.findAll({ skip, take });
+    const patients = await this.patientsService.findAll({ skip, take });
+    return {
+      message: 'Patients retrieved successfully',
+      data: patients,
+    };
   }
 
   @Get(':id')
   @Roles(PrismaRole.ADMIN, PrismaRole.RECEPTIONIST, PrismaRole.DOCTOR)
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.patientsService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const patient = await this.patientsService.findOne(id);
+    return {
+      message: 'Patient retrieved successfully',
+      data: patient,
+    };
   }
 
   @Patch(':id')
   @Roles(PrismaRole.ADMIN, PrismaRole.RECEPTIONIST)
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePatientDto: UpdatePatientDto,
   ) {
-    return this.patientsService.update(id, updatePatientDto);
+    const patient = await this.patientsService.update(id, updatePatientDto);
+    return {
+      message: 'Patient updated successfully',
+      data: patient,
+    };
   }
 
   @Delete(':id')
   @Roles(PrismaRole.ADMIN)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.patientsService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.patientsService.remove(id);
+    return {
+      message: 'Patient deleted successfully',
+    };
   }
 }

@@ -23,35 +23,57 @@ export class DoctorsController {
 
   @Post()
   @Roles(PrismaRole.ADMIN)
-  create(@Body() createDoctorDto: CreateDoctorDto) {
-    return this.doctorsService.create(createDoctorDto);
+  async create(@Body() createDoctorDto: CreateDoctorDto) {
+    const doctor = await this.doctorsService.create(createDoctorDto);
+    return {
+      message: 'Doctor created successfully',
+      data: doctor,
+    };
   }
 
   @Get()
-  findAll(
+  @Roles(PrismaRole.ADMIN)
+  async findAll(
     @Query('skip', new ParseIntPipe({ optional: true })) skip?: number,
     @Query('take', new ParseIntPipe({ optional: true })) take?: number,
   ) {
-    return this.doctorsService.findAll({ skip, take });
+    const doctors = await this.doctorsService.findAll({ skip, take });
+    const result = {
+      message: 'Doctors retrieved successfully',
+      data: doctors,
+    };
+    return result;
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.doctorsService.findOne(id);
+  @Roles(PrismaRole.ADMIN)
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const doctor = await this.doctorsService.findOne(id);
+    return {
+      message: 'Doctor retrieved successfully',
+      data: doctor,
+    };
   }
 
   @Patch(':id')
   @Roles(PrismaRole.ADMIN)
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDoctorDto: UpdateDoctorDto,
   ) {
-    return this.doctorsService.update(id, updateDoctorDto);
+    const doctor = await this.doctorsService.update(id, updateDoctorDto);
+    return {
+      message: 'Doctor updated successfully',
+      data: doctor,
+    };
   }
 
   @Delete(':id')
   @Roles(PrismaRole.ADMIN)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.doctorsService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.doctorsService.remove(id);
+    return {
+      message: 'Doctor deleted successfully',
+    };
   }
 }

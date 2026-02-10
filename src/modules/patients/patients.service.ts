@@ -7,7 +7,18 @@ export class PatientsService {
   constructor(private readonly patientsRepository: PatientsRepository) {}
 
   async create(createPatientDto: CreatePatientDto) {
-    return await this.patientsRepository.create(createPatientDto);
+    try {
+      const existingPatient = await this.patientsRepository.findByPhoneNumber(
+        createPatientDto.phone,
+      );
+
+      if (existingPatient) {
+        return existingPatient;
+      }
+      return await this.patientsRepository.create(createPatientDto);
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
   async findAll(params: { skip?: number; take?: number }) {
